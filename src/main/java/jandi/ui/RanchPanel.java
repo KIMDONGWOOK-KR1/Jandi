@@ -9,14 +9,11 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -145,32 +142,7 @@ public class RanchPanel extends JPanel {
         this.ranch = ranch;
         this.me = me;
         setOpaque(false);
-        MouseAdapter mouse = new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Task t = at(e);
-                if (t != null) {
-                    onSelect.accept(t);
-                }
-            }
-
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                setCursor(Cursor.getPredefinedCursor(at(e) != null ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
-            }
-        };
-        addMouseListener(mouse);
-        addMouseMotionListener(mouse);
-    }
-
-    private Task at(MouseEvent e) {
-        Task found = null;
-        for (Map.Entry<Rectangle, Task> h : hits.entrySet()) {
-            if (h.getKey().contains(e.getPoint())) {
-                found = h.getValue(); // 나중에 그린(위에 있는) 양이 이긴다.
-            }
-        }
-        return found;
+        UiKit.listenTaskClicks(this, hits, onSelect);
     }
 
     /** @param taskId 고른 할 일 번호(없으면 null) */
@@ -447,10 +419,5 @@ public class RanchPanel extends JPanel {
     private static int[] spot(int seed, int cycle) {
         Random r = new Random(seed * 31L + cycle);
         return new int[]{r.nextInt(25) - 12, r.nextInt(9) - 4};
-    }
-
-    /** @return 지금 그려진 양들의 누를 수 있는 영역(테스트·점검용) */
-    public List<Rectangle> hitAreas() {
-        return new ArrayList<>(hits.keySet());
     }
 }

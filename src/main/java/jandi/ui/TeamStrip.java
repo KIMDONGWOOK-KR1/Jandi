@@ -6,15 +6,12 @@ import jandi.service.Ranch;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,31 +37,7 @@ public class TeamStrip extends UiKit.Card {
     public TeamStrip(Ranch ranch, Consumer<Task> onSelect) {
         this.ranch = ranch;
         setPreferredSize(new Dimension(100, 150));
-        MouseAdapter mouse = new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Task t = at(e);
-                if (t != null) {
-                    onSelect.accept(t);
-                }
-            }
-
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                setCursor(Cursor.getPredefinedCursor(at(e) != null ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
-            }
-        };
-        addMouseListener(mouse);
-        addMouseMotionListener(mouse);
-    }
-
-    private Task at(MouseEvent e) {
-        for (Map.Entry<Rectangle, Task> h : hits.entrySet()) {
-            if (h.getKey().contains(e.getPoint())) {
-                return h.getValue();
-            }
-        }
-        return null;
+        UiKit.listenTaskClicks(this, hits, onSelect);
     }
 
     /** @param taskId 고른 할 일 번호(없으면 null) */

@@ -1,7 +1,10 @@
 package jandi.ui;
 
+import jandi.domain.Task;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import java.awt.BasicStroke;
@@ -12,10 +15,15 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.function.Consumer;
 
 /**
  * 화면 공통 도구: 색, 글꼴, 카드 패널, 둥근 버튼.
@@ -172,6 +180,43 @@ public final class UiKit {
             g.setColor(new Color(0xF6C445));
             g.fillOval(x - 2, y - 2, 5, 5);
         }
+    }
+
+    /**
+     * 직접 그린 양을 마우스로 고를 수 있게 한다. 양 위에서는 손 모양 커서를 보이고, 누르면 그 할 일을 넘긴다.
+     *
+     * @param c        양을 그리는 패널
+     * @param hits     그릴 때 채워 두는 클릭 영역과 할 일 (그린 순서대로)
+     * @param onSelect 양을 눌렀을 때 부를 동작
+     */
+    static void listenTaskClicks(JComponent c, Map<Rectangle, Task> hits, Consumer<Task> onSelect) {
+        MouseAdapter mouse = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Task t = taskAt(hits, e);
+                if (t != null) {
+                    onSelect.accept(t);
+                }
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                c.setCursor(Cursor.getPredefinedCursor(taskAt(hits, e) != null ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+            }
+        };
+        c.addMouseListener(mouse);
+        c.addMouseMotionListener(mouse);
+    }
+
+    /** 마우스 위치의 할 일. 겹치면 나중에 그린(위에 있는) 양이 이긴다. */
+    private static Task taskAt(Map<Rectangle, Task> hits, MouseEvent e) {
+        Task found = null;
+        for (Map.Entry<Rectangle, Task> h : hits.entrySet()) {
+            if (h.getKey().contains(e.getPoint())) {
+                found = h.getValue();
+            }
+        }
+        return found;
     }
 
     /**
