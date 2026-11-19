@@ -22,10 +22,9 @@ import java.util.List;
  */
 public class GrassPanel extends UiKit.Card {
 
-    private static final long serialVersionUID = 1L;
     private static final int WEEKS = 24;
     private static final Color EMPTY = new Color(0xE9E2CF);
-    private final transient Ranch ranch;
+    private final Ranch ranch;
 
     /** @param ranch 목장 */
     public GrassPanel(Ranch ranch) {
@@ -78,7 +77,7 @@ public class GrassPanel extends UiKit.Card {
             Contribution c = ranch.contributionOf(m.getId());
             Color base = new Color(m.getColor());
             int y = top + i * rowH;
-            Sprites.farmer(g, 46, y + 52, 46, base);
+            Sprites.farmer(g, 46, y + 52, 46, base, Sprites.IDLE, false);
             g.setFont(UiKit.font(Font.BOLD, 14));
             g.setColor(UiKit.INK);
             g.drawString(m.getName() + " · " + (ranch.isGitReady() ? Math.round(c.getPercent()) + "%" : "–"), 78, y + 22);

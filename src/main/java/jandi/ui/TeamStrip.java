@@ -25,9 +25,8 @@ import java.util.function.Consumer;
  */
 public class TeamStrip extends UiKit.Card {
 
-    private static final long serialVersionUID = 1L;
-    private final transient Ranch ranch;
-    private final transient Map<Rectangle, Task> hits = new LinkedHashMap<>();
+    private final Ranch ranch;
+    private final Map<Rectangle, Task> hits = new LinkedHashMap<>();
     private String selectedId;
 
     /**
@@ -73,7 +72,7 @@ public class TeamStrip extends UiKit.Card {
             String pct = ranch.isGitReady() ? Math.round(ranch.contributionOf(m.getId()).getPercent()) + "%" : "–";
             g.drawString("제출 " + sub + "/" + tasks.size() + " · 기여도 " + pct, nx, 33);
             Color base = new Color(m.getColor());
-            Sprites.farmer(g, x + 40, 118, 62, base);
+            Sprites.farmer(g, x + 40, 118, 62, base, Sprites.IDLE, false);
             int step = 62;
             int fitN = Math.max(1, (colW - 86) / step);
             int show = tasks.size() > fitN ? fitN - 1 : tasks.size();
@@ -86,7 +85,8 @@ public class TeamStrip extends UiKit.Card {
                     g.setColor(UiKit.SOFT);
                     g.fillRoundRect(cx - 29, cy - 24, 58, 66, 12, 12);
                 }
-                Sprites.sheep(g, cx, cy, 32, t.isSubmitted() ? wool : new Color(0xFFFDF6), !t.isSubmitted());
+                Sprites.sheep(g, cx, cy, 32, t.isSubmitted() ? wool : new Color(0xFFFDF6), !t.isSubmitted(),
+                        Sprites.IDLE, false);
                 g.setFont(UiKit.font(Font.PLAIN, 10));
                 FontMetrics fm = g.getFontMetrics();
                 String s = UiKit.fit(fm, t.getTitle(), step - 6);

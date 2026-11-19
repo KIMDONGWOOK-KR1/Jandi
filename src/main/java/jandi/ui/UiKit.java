@@ -5,6 +5,7 @@ import jandi.domain.Task;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import java.awt.BasicStroke;
@@ -15,6 +16,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
+import java.awt.LayoutManager;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
@@ -150,35 +152,54 @@ public final class UiKit {
         g.drawString(t, cx - w / 2 + 5, y + fm.getAscent() + 1);
     }
 
-    /**
-     * 잔디 바탕과 풀·꽃 무늬를 그린다.
-     *
-     * @param g 그래픽
-     * @param w 너비
-     * @param h 높이
-     */
-    public static void paintGrass(Graphics2D g, int w, int h) {
-        g.setColor(GRASS);
-        g.fillRect(0, 0, w, h);
-        Random r = new Random(7);
-        g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        for (int i = 0; i < 46; i++) {
-            int x = r.nextInt(Math.max(1, w));
-            int y = r.nextInt(Math.max(1, h));
-            g.setColor(GRASS_DARK);
-            g.drawLine(x, y, x - 5, y - 10);
-            g.drawLine(x, y, x, y - 13);
-            g.drawLine(x, y, x + 6, y - 9);
+    /** 바탕을 칠하지 않는(투명한) 패널을 만든다. */
+    static JPanel clear(LayoutManager layout) {
+        JPanel p = new JPanel(layout);
+        p.setOpaque(false);
+        return p;
+    }
+
+    /** 글꼴과 글자색을 맞춘 라벨을 만든다. */
+    static JLabel label(String text, int style, int size, Color fg) {
+        JLabel l = new JLabel(text);
+        l.setFont(font(style, size));
+        l.setForeground(fg);
+        return l;
+    }
+
+    /** 잔디 바탕과 풀·꽃 무늬를 그리는 배경 패널. 메인 창과 로그인 창의 바탕으로 쓴다. */
+    static class Meadow extends JPanel {
+        Meadow(LayoutManager layout) {
+            super(layout);
         }
-        for (int i = 0; i < 14; i++) {
-            int x = r.nextInt(Math.max(1, w));
-            int y = r.nextInt(Math.max(1, h));
-            g.setColor(Color.WHITE);
-            for (int k = 0; k < 4; k++) {
-                g.fillOval(x + (k % 2) * 6 - 5, y + (k / 2) * 6 - 5, 7, 7);
+
+        @Override
+        protected void paintComponent(Graphics g0) {
+            Graphics2D g = aa(g0);
+            int w = getWidth();
+            int h = getHeight();
+            g.setColor(GRASS);
+            g.fillRect(0, 0, w, h);
+            Random r = new Random(7);
+            g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            for (int i = 0; i < 46; i++) {
+                int x = r.nextInt(Math.max(1, w));
+                int y = r.nextInt(Math.max(1, h));
+                g.setColor(GRASS_DARK);
+                g.drawLine(x, y, x - 5, y - 10);
+                g.drawLine(x, y, x, y - 13);
+                g.drawLine(x, y, x + 6, y - 9);
             }
-            g.setColor(new Color(0xF6C445));
-            g.fillOval(x - 2, y - 2, 5, 5);
+            for (int i = 0; i < 14; i++) {
+                int x = r.nextInt(Math.max(1, w));
+                int y = r.nextInt(Math.max(1, h));
+                g.setColor(Color.WHITE);
+                for (int k = 0; k < 4; k++) {
+                    g.fillOval(x + (k % 2) * 6 - 5, y + (k / 2) * 6 - 5, 7, 7);
+                }
+                g.setColor(new Color(0xF6C445));
+                g.fillOval(x - 2, y - 2, 5, 5);
+            }
         }
     }
 
@@ -223,8 +244,6 @@ public final class UiKit {
      * 크림색 바탕에 갈색 테두리와 그림자가 있는 둥근 카드 패널.
      */
     public static class Card extends JPanel {
-        private static final long serialVersionUID = 1L;
-
         /** 카드를 만든다. */
         public Card() {
             setOpaque(false);
@@ -251,7 +270,6 @@ public final class UiKit {
      * 아래쪽에 그림자가 있는 둥근 버튼.
      */
     public static class RoundButton extends JButton {
-        private static final long serialVersionUID = 1L;
         private Color fill;
         private Color text;
 

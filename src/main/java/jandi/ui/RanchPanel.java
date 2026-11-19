@@ -37,13 +37,12 @@ import java.util.stream.Collectors;
  */
 public class RanchPanel extends JPanel {
 
-    private static final long serialVersionUID = 1L;
-    private final transient Ranch ranch;
-    private final transient Member me;
-    private final transient Map<Rectangle, Task> hits = new LinkedHashMap<>();
-    private final transient Map<String, Walker> walkers = new HashMap<>();
-    private final transient Map<String, Rectangle> pens = new HashMap<>();
-    private final transient Random random = new Random();
+    private final Ranch ranch;
+    private final Member me;
+    private final Map<Rectangle, Task> hits = new LinkedHashMap<>();
+    private final Map<String, Walker> walkers = new HashMap<>();
+    private final Map<String, Rectangle> pens = new HashMap<>();
+    private final Random random = new Random();
     private final Timer timer = new Timer(70, e -> tick());
     private int tick;
     private String selectedId;

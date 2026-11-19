@@ -32,8 +32,6 @@ import java.util.function.Consumer;
  */
 public class TaskListPanel extends UiKit.Card {
 
-    private static final long serialVersionUID = 1L;
-
     /** 할 일 목록에서 일어나는 동작을 받는 쪽. */
     public interface Actions {
         /** 새 할 일 추가를 눌렀다. */
@@ -54,10 +52,10 @@ public class TaskListPanel extends UiKit.Card {
         void memo(Task t);
     }
 
-    private final transient Ranch ranch;
-    private final transient Member me;
-    private final transient Actions actions;
-    private final transient Consumer<Task> onSelect;
+    private final Ranch ranch;
+    private final Member me;
+    private final Actions actions;
+    private final Consumer<Task> onSelect;
     private final JPanel list = new JPanel();
     private String selectedId;
 
@@ -73,23 +71,19 @@ public class TaskListPanel extends UiKit.Card {
         this.actions = actions;
         this.onSelect = onSelect;
         setLayout(new BorderLayout(0, 10));
-        JLabel title = new JLabel("내 할 일");
-        title.setFont(UiKit.font(Font.BOLD, 18));
-        title.setForeground(UiKit.INK);
+        JLabel title = UiKit.label("내 할 일", Font.BOLD, 18, UiKit.INK);
         UiKit.RoundButton add = new UiKit.RoundButton("+", true);
         add.setFont(UiKit.font(Font.BOLD, 18));
         add.setToolTipText("할 일 추가");
         add.setPreferredSize(new Dimension(40, 36));
         add.addActionListener(e -> actions.add());
-        JPanel head = new JPanel(new BorderLayout());
-        head.setOpaque(false);
+        JPanel head = UiKit.clear(new BorderLayout());
         head.add(title, BorderLayout.WEST);
         head.add(add, BorderLayout.EAST);
         add(head, BorderLayout.NORTH);
         list.setOpaque(false);
         list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-        JPanel holder = new JPanel(new BorderLayout());
-        holder.setOpaque(false);
+        JPanel holder = UiKit.clear(new BorderLayout());
         holder.add(list, BorderLayout.NORTH);
         JScrollPane scroll = new JScrollPane(holder);
         scroll.setBorder(null);
@@ -124,7 +118,6 @@ public class TaskListPanel extends UiKit.Card {
     }
 
     private final class Row extends JPanel {
-        private static final long serialVersionUID = 1L;
         private final boolean selected;
 
         Row(Task t) {
@@ -136,12 +129,9 @@ public class TaskListPanel extends UiKit.Card {
             setPreferredSize(new Dimension(100, 44));
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             Check check = new Check(t);
-            JLabel name = new JLabel(t.getTitle());
-            name.setFont(UiKit.font(Font.BOLD, 14));
-            name.setForeground(UiKit.INK);
-            JLabel side = new JLabel(t.isSubmitted() ? "제출됨" : "메모");
-            side.setFont(UiKit.font(Font.PLAIN, 11));
-            side.setForeground(t.isSubmitted() ? UiKit.MUTED : UiKit.BROWN);
+            JLabel name = UiKit.label(t.getTitle(), Font.BOLD, 14, UiKit.INK);
+            JLabel side = UiKit.label(t.isSubmitted() ? "제출됨" : "메모", Font.PLAIN, 11,
+                    t.isSubmitted() ? UiKit.MUTED : UiKit.BROWN);
             add(check, BorderLayout.WEST);
             add(name, BorderLayout.CENTER);
             add(side, BorderLayout.EAST);
@@ -186,7 +176,6 @@ public class TaskListPanel extends UiKit.Card {
     }
 
     private static final class Check extends JComponent {
-        private static final long serialVersionUID = 1L;
         private final boolean on;
 
         Check(Task t) {

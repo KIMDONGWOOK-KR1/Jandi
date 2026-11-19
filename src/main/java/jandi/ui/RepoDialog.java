@@ -31,10 +31,9 @@ import java.util.Map;
  */
 public class RepoDialog extends JDialog {
 
-    private static final long serialVersionUID = 1L;
-    private final transient Ranch ranch;
+    private final Ranch ranch;
     private final JTextField path = new JTextField(30);
-    private final transient Map<Member, JComboBox<String>> combos = new LinkedHashMap<>();
+    private final Map<Member, JComboBox<String>> combos = new LinkedHashMap<>();
 
     /**
      * @param owner 부모 창

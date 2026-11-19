@@ -28,8 +28,7 @@ import java.awt.GridLayout;
  */
 public class LoginDialog extends JDialog {
 
-    private static final long serialVersionUID = 1L;
-    private transient Member chosen;
+    private Member chosen;
 
     /**
      * @param owner 부모 창(없으면 null)
@@ -37,31 +36,20 @@ public class LoginDialog extends JDialog {
      */
     public LoginDialog(Frame owner, Ranch ranch) {
         super(owner, "잔디 — 로그인", true);
-        JPanel root = new JPanel(new BorderLayout()) {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                UiKit.paintGrass(UiKit.aa(g), getWidth(), getHeight());
-            }
-        };
+        JPanel root = new UiKit.Meadow(new BorderLayout());
         root.setBorder(BorderFactory.createEmptyBorder(26, 30, 26, 30));
         UiKit.Card card = new UiKit.Card();
         card.setLayout(new BorderLayout(0, 14));
         card.setBorder(BorderFactory.createEmptyBorder(22, 24, 28, 24));
-        JLabel title = new JLabel("누구로 들어갈까요?", SwingConstants.CENTER);
-        title.setFont(UiKit.font(Font.BOLD, 20));
-        title.setForeground(UiKit.INK);
-        JLabel sub = new JLabel("잔디 — 팀 기여도 목장", SwingConstants.CENTER);
-        sub.setFont(UiKit.font(Font.PLAIN, 13));
-        sub.setForeground(UiKit.MUTED);
-        JPanel head = new JPanel(new GridLayout(2, 1, 0, 2));
-        head.setOpaque(false);
+        JLabel title = UiKit.label("누구로 들어갈까요?", Font.BOLD, 20, UiKit.INK);
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel sub = UiKit.label("잔디 — 팀 기여도 목장", Font.PLAIN, 13, UiKit.MUTED);
+        sub.setHorizontalAlignment(SwingConstants.CENTER);
+        JPanel head = UiKit.clear(new GridLayout(2, 1, 0, 2));
         head.add(title);
         head.add(sub);
         card.add(head, BorderLayout.NORTH);
-        JPanel row = new JPanel(new GridLayout(1, 0, 12, 0));
-        row.setOpaque(false);
+        JPanel row = UiKit.clear(new GridLayout(1, 0, 12, 0));
         for (Member m : ranch.members()) {
             row.add(new FarmerButton(m));
         }
@@ -79,8 +67,7 @@ public class LoginDialog extends JDialog {
     }
 
     private final class FarmerButton extends JButton {
-        private static final long serialVersionUID = 1L;
-        private final transient Member member;
+        private final Member member;
 
         FarmerButton(Member m) {
             this.member = m;
@@ -102,7 +89,7 @@ public class LoginDialog extends JDialog {
             Color c = new Color(member.getColor());
             g.setColor(getModel().isRollover() ? UiKit.mix(c, Color.WHITE, 0.7) : UiKit.SOFT);
             g.fillRoundRect(0, 0, getWidth(), getHeight() - 2, 16, 16);
-            Sprites.farmer(g, getWidth() / 2 - 4, 106, 84, c);
+            Sprites.farmer(g, getWidth() / 2 - 4, 106, 84, c, Sprites.IDLE, false);
             g.setFont(UiKit.font(Font.BOLD, 15));
             FontMetrics fm = g.getFontMetrics();
             g.setColor(UiKit.INK);

@@ -43,20 +43,6 @@ public final class Sprites {
     }
 
     /**
-     * 양을 서 있는 모습으로 그린다.
-     *
-     * @param g     그래픽
-     * @param cx    가운데 x
-     * @param cy    가운데 y
-     * @param s     크기(키쯤)
-     * @param wool  양털 색(흰색에 가까우면 원래 색 그대로 그린다)
-     * @param faded true면 흐리게 그린다(아직 제출하지 않은 양)
-     */
-    public static void sheep(Graphics2D g, int cx, int cy, int s, Color wool, boolean faded) {
-        sheep(g, cx, cy, s, wool, faded, IDLE, false);
-    }
-
-    /**
      * 양을 그린다.
      *
      * @param g     그래픽
@@ -81,19 +67,6 @@ public final class Sprites {
             g.fillOval(cx - s / 2, cy - s / 2, s, s);
         }
         g.setComposite(old);
-    }
-
-    /**
-     * 농부를 서 있는 모습으로 그린다.
-     *
-     * @param g     그래픽
-     * @param cx    가운데 x
-     * @param footY 발끝 y
-     * @param h     키
-     * @param shirt 옷 색(팀원 대표 색)
-     */
-    public static void farmer(Graphics2D g, int cx, int footY, int h, Color shirt) {
-        farmer(g, cx, footY, h, shirt, IDLE, false);
     }
 
     /**
@@ -175,8 +148,8 @@ public final class Sprites {
             this.path = path;
         }
 
-        synchronized boolean draw(Graphics2D g, int cx, int footY, int h, Color color, int frame, boolean flip,
-                                  boolean wool) {
+        boolean draw(Graphics2D g, int cx, int footY, int h, Color color, int frame, boolean flip,
+                     boolean wool) {
             load();
             if (frames == null) {
                 return false;
@@ -184,10 +157,8 @@ public final class Sprites {
             double scale = h / (double) charHeight;
             int size = (int) Math.round(cell * scale);
             int f = Math.floorMod(frame, frames.length);
-            Composite keep = g.getComposite();
             g.setColor(new Color(60, 90, 40, 60));
             g.fillOval(cx - (int) (h * 0.3), footY - (int) (h * 0.07), (int) (h * 0.6), (int) (h * 0.13));
-            g.setComposite(keep);
             Object old = g.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g.drawImage(scaled(f, size, color, flip, wool), cx - size / 2,

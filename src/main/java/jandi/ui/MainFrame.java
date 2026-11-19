@@ -33,15 +33,14 @@ import java.awt.event.WindowEvent;
  */
 public class MainFrame extends JFrame {
 
-    private static final long serialVersionUID = 1L;
-    private final transient Ranch ranch;
-    private final transient Member me;
+    private final Ranch ranch;
+    private final Member me;
     private final RanchPanel ranchPanel;
     private final GrassPanel grassPanel;
     private final TeamStrip strip;
     private final TaskListPanel taskList;
     private final DetailPanel detail;
-    private final JLabel profileSub = new JLabel();
+    private final JLabel profileSub = UiKit.label("", Font.PLAIN, 11, UiKit.MUTED);
     private String selectedId;
 
     /**
@@ -55,14 +54,7 @@ public class MainFrame extends JFrame {
         this.me = me;
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        JPanel root = new JPanel(new BorderLayout(18, 12)) {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                UiKit.paintGrass(UiKit.aa(g), getWidth(), getHeight());
-            }
-        };
+        JPanel root = new UiKit.Meadow(new BorderLayout(18, 12));
         root.setBorder(BorderFactory.createEmptyBorder(16, 20, 14, 20));
 
         ranchPanel = new RanchPanel(ranch, me, this::select);
@@ -87,16 +79,14 @@ public class MainFrame extends JFrame {
         }, this::select);
 
         // 왼쪽: 내 정보 + 내 할 일
-        JPanel left = new JPanel(new BorderLayout(0, 12));
-        left.setOpaque(false);
+        JPanel left = UiKit.clear(new BorderLayout(0, 12));
         left.setPreferredSize(new Dimension(290, 100));
         left.add(profileCard(onLogout), BorderLayout.NORTH);
         left.add(taskList, BorderLayout.CENTER);
 
         // 가운데: 탭 + 목장/양털
         CardLayout cards = new CardLayout();
-        JPanel center = new JPanel(cards);
-        center.setOpaque(false);
+        JPanel center = UiKit.clear(cards);
         center.add(ranchPanel, "ranch");
         center.add(grassPanel, "grass");
         UiKit.RoundButton tabRanch = new UiKit.RoundButton("목장", true);
@@ -122,17 +112,14 @@ public class MainFrame extends JFrame {
         tabs.add(tabRanch);
         tabs.add(tabGrass);
         tabs.add(repo);
-        JPanel tabRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        tabRow.setOpaque(false);
+        JPanel tabRow = UiKit.clear(new FlowLayout(FlowLayout.CENTER, 0, 0));
         tabRow.add(tabs);
-        JPanel mid = new JPanel(new BorderLayout(0, 8));
-        mid.setOpaque(false);
+        JPanel mid = UiKit.clear(new BorderLayout(0, 8));
         mid.add(tabRow, BorderLayout.NORTH);
         mid.add(center, BorderLayout.CENTER);
 
         // 오른쪽: 상세
-        JPanel right = new JPanel(new BorderLayout());
-        right.setOpaque(false);
+        JPanel right = UiKit.clear(new BorderLayout());
         right.add(detail, BorderLayout.NORTH);
 
         root.add(left, BorderLayout.WEST);
@@ -158,8 +145,6 @@ public class MainFrame extends JFrame {
         card.setLayout(new BorderLayout(10, 0));
         Color mine = new Color(me.getColor());
         JPanel avatar = new JPanel() {
-            private static final long serialVersionUID = 1L;
-
             @Override
             protected void paintComponent(Graphics g0) {
                 Graphics2D g = UiKit.aa(g0.create());
@@ -175,13 +160,8 @@ public class MainFrame extends JFrame {
         };
         avatar.setOpaque(false);
         avatar.setPreferredSize(new Dimension(46, 46));
-        JLabel name = new JLabel(me.getName());
-        name.setFont(UiKit.font(Font.BOLD, 17));
-        name.setForeground(UiKit.INK);
-        profileSub.setFont(UiKit.font(Font.PLAIN, 11));
-        profileSub.setForeground(UiKit.MUTED);
-        JPanel text = new JPanel(new BorderLayout());
-        text.setOpaque(false);
+        JLabel name = UiKit.label(me.getName(), Font.BOLD, 17, UiKit.INK);
+        JPanel text = UiKit.clear(new BorderLayout());
         text.add(name, BorderLayout.CENTER);
         text.add(profileSub, BorderLayout.SOUTH);
         UiKit.RoundButton logout = new UiKit.RoundButton("로그아웃", false);
@@ -190,8 +170,7 @@ public class MainFrame extends JFrame {
             dispose();
             onLogout.run();
         });
-        JPanel east = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 4));
-        east.setOpaque(false);
+        JPanel east = UiKit.clear(new FlowLayout(FlowLayout.RIGHT, 0, 4));
         east.add(logout);
         card.add(avatar, BorderLayout.WEST);
         card.add(text, BorderLayout.CENTER);
@@ -239,12 +218,7 @@ public class MainFrame extends JFrame {
         Object[] form = {"할 일 제목", title, "메모 (한 일, 나중에 적어도 됩니다)", new JScrollPane(memo)};
         if (JOptionPane.showConfirmDialog(this, form, "할 일 추가", JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
-            try {
-                selectedId = ranch.tasks().add(me.getId(), title.getText(), memo.getText()).getId();
-            } catch (JandiException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "잔디", JOptionPane.INFORMATION_MESSAGE);
-            }
-            refresh();
+            act(() -> selectedId = ranch.tasks().add(me.getId(), title.getText(), memo.getText()).getId(), null);
         }
     }
 

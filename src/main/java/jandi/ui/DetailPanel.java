@@ -24,16 +24,15 @@ import java.util.function.Consumer;
  */
 public class DetailPanel extends UiKit.Card {
 
-    private static final long serialVersionUID = 1L;
     private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("MM-dd HH:mm");
-    private final transient Ranch ranch;
-    private final transient Member me;
-    private final JLabel title = new JLabel("양을 눌러 보세요");
-    private final JLabel body = new JLabel();
+    private final Ranch ranch;
+    private final Member me;
+    private final JLabel title = UiKit.label("양을 눌러 보세요", Font.BOLD, 19, UiKit.INK);
+    private final JLabel body = UiKit.label("", Font.PLAIN, 13, UiKit.INK);
     private final UiKit.RoundButton submit = new UiKit.RoundButton("양 들여보내기 (제출)", true);
     private final UiKit.RoundButton delete = new UiKit.RoundButton("삭제", false);
     private final UiKit.RoundButton withdraw = new UiKit.RoundButton("양 내보내기", false);
-    private transient Task task;
+    private Task task;
 
     /**
      * @param ranch    목장
@@ -48,25 +47,18 @@ public class DetailPanel extends UiKit.Card {
         this.me = me;
         setLayout(new BorderLayout(0, 8));
         setPreferredSize(new Dimension(310, 330));
-        title.setFont(UiKit.font(Font.BOLD, 19));
-        title.setForeground(UiKit.INK);
-        body.setFont(UiKit.font(Font.PLAIN, 13));
-        body.setForeground(UiKit.INK);
         body.setVerticalAlignment(SwingConstants.TOP);
         submit.addActionListener(e -> onSubmit.accept(task));
         delete.addActionListener(e -> onDelete.accept(task));
         withdraw.addActionListener(e -> onWithdraw.accept(task));
         withdraw.setFont(UiKit.font(Font.BOLD, 11));
         withdraw.setBorder(BorderFactory.createEmptyBorder(4, 10, 7, 10));
-        JPanel small = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        small.setOpaque(false);
+        JPanel small = UiKit.clear(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         small.add(withdraw);
-        JPanel main = new JPanel(new GridLayout(0, 1, 0, 8));
-        main.setOpaque(false);
+        JPanel main = UiKit.clear(new GridLayout(0, 1, 0, 8));
         main.add(submit);
         main.add(delete);
-        JPanel buttons = new JPanel(new BorderLayout(0, 6));
-        buttons.setOpaque(false);
+        JPanel buttons = UiKit.clear(new BorderLayout(0, 6));
         buttons.add(small, BorderLayout.NORTH);
         buttons.add(main, BorderLayout.CENTER);
         add(title, BorderLayout.NORTH);
