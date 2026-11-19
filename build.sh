@@ -7,7 +7,18 @@ cd "$(dirname "$0")"
 
 OUT=build
 VERSION="0.1"
-rm -rf "$OUT"
+
+# 클래스패스 구분자: Windows(Git Bash 등)의 java는 ';', 나머지는 ':'
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) SEP=';' ;;
+  *)                    SEP=':' ;;
+esac
+
+# Windows는 실행 중인 jar를 잠그므로, 잔디가 켜져 있으면 build 폴더를 지울 수 없다
+rm -rf "$OUT" 2>/dev/null || {
+  echo "오류: $OUT 폴더를 지울 수 없습니다. 잔디가 실행 중이면 끄고 다시 빌드하세요." >&2
+  exit 1
+}
 mkdir -p "$OUT/classes" "$OUT/test-classes" "$OUT/dist"
 
 echo "[1/4] 컴파일"
@@ -18,7 +29,7 @@ cp -r src/main/resources/. "$OUT/classes/"
 echo "[2/4] 자체 테스트"
 javac -encoding UTF-8 --release 17 -cp "$OUT/classes" -d "$OUT/test-classes" \
       $(find src/test/java -name '*.java')
-java -Dstdout.encoding=UTF-8 -Djava.awt.headless=true -cp "$OUT/classes:$OUT/test-classes" jandi.SelfTest
+java -Dstdout.encoding=UTF-8 -Djava.awt.headless=true -cp "$OUT/classes${SEP}$OUT/test-classes" jandi.SelfTest
 
 echo "[3/4] 실행 jar"
 cat > "$OUT/MANIFEST.MF" <<MF

@@ -48,6 +48,8 @@ java -jar build/dist/jandi.jar
 ./build.sh
 ```
 
+Windows에서는 Git Bash에서 실행합니다. 잔디가 실행 중이면 jar 파일이 잠겨 빌드가 멈추므로, 먼저 끄고 빌드하세요.
+
 1. 컴파일 (`build/classes`)
 2. 자체 테스트 `jandi.SelfTest` 11개 실행 (외부 라이브러리 없음)
 3. 실행 jar `build/dist/jandi.jar`
