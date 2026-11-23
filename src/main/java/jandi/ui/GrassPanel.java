@@ -60,6 +60,7 @@ public class GrassPanel extends UiKit.Card {
         g.drawString(UiKit.fit(fm, ranch.gitMessage(), w - 48), 24, 60);
 
         List<Member> ms = ranch.members();
+        boolean hasTeamCommits = ranch.contributions().values().stream().anyMatch(c -> c.getCommits() > 0);
         int max = 1;
         for (Contribution c : ranch.contributions().values()) {
             for (int v : c.getDaily().values()) {
@@ -80,7 +81,8 @@ public class GrassPanel extends UiKit.Card {
             Sprites.farmer(g, 46, y + 52, 46, base, Sprites.IDLE, false);
             g.setFont(UiKit.font(Font.BOLD, 14));
             g.setColor(UiKit.INK);
-            g.drawString(m.getName() + " · " + (ranch.isGitReady() ? Math.round(c.getPercent()) + "%" : "–"), 78, y + 22);
+            String pct = hasTeamCommits ? Math.round(c.getPercent()) + "%" : "–";
+            g.drawString(m.getName() + " · " + pct, 78, y + 22);
             g.setFont(UiKit.font(Font.PLAIN, 11));
             g.setColor(UiKit.MUTED);
             g.drawString("커밋 " + c.getCommits() + "개", 78, y + 39);

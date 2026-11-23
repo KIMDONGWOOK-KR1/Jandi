@@ -51,6 +51,7 @@ public class TeamStrip extends UiKit.Card {
         Graphics2D g = UiKit.aa(g0.create());
         hits.clear();
         List<Member> ms = ranch.members();
+        boolean hasTeamCommits = ranch.contributions().values().stream().anyMatch(c -> c.getCommits() > 0);
         int colW = (getWidth() - 24) / Math.max(1, ms.size());
         for (int i = 0; i < ms.size(); i++) {
             Member m = ms.get(i);
@@ -69,7 +70,7 @@ public class TeamStrip extends UiKit.Card {
             int nx = x + 18 + g.getFontMetrics().stringWidth(m.getName()) + 8;
             g.setFont(UiKit.font(Font.PLAIN, 11));
             g.setColor(UiKit.MUTED);
-            String pct = ranch.isGitReady() ? Math.round(ranch.contributionOf(m.getId()).getPercent()) + "%" : "–";
+            String pct = hasTeamCommits ? Math.round(ranch.contributionOf(m.getId()).getPercent()) + "%" : "–";
             g.drawString("제출 " + sub + "/" + tasks.size() + " · 기여도 " + pct, nx, 33);
             Color base = new Color(m.getColor());
             Sprites.farmer(g, x + 40, 118, 62, base, Sprites.IDLE, false);
