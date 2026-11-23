@@ -38,25 +38,22 @@ public final class App {
      * @param args 실행 인자
      */
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> start(args));
+    }
+
+    private static void start(String[] args) {
         Path dir = Paths.get(System.getProperty("user.home"), "jandi-data");
         Path repo = null;
-        boolean sample = false;
+        boolean autoSample = false;
         for (int i = 0; i < args.length; i++) {
             if ("--data".equals(args[i]) && i + 1 < args.length) {
                 dir = Paths.get(args[++i]);
             } else if ("--repo".equals(args[i]) && i + 1 < args.length) {
                 repo = Paths.get(args[++i]);
             } else if ("--sample".equals(args[i])) {
-                sample = true;
+                autoSample = true;
             }
         }
-        final Path dataDir = dir;
-        final Path repoDir = repo;
-        final boolean autoSample = sample;
-        SwingUtilities.invokeLater(() -> start(dataDir, repoDir, autoSample));
-    }
-
-    private static void start(Path dir, Path repo, boolean autoSample) {
         UiKit.install();
         DataStore store;
         try {

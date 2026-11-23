@@ -135,30 +135,22 @@ public class TaskListPanel extends UiKit.Card {
             add(check, BorderLayout.WEST);
             add(name, BorderLayout.CENTER);
             add(side, BorderLayout.EAST);
-            MouseAdapter pick = new MouseAdapter() {
+            MouseAdapter click = new MouseAdapter() { // 눌린 곳(이벤트 소스)에 따라 동작을 나눈다.
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    onSelect.accept(t);
-                }
-            };
-            addMouseListener(pick);
-            name.addMouseListener(pick);
-            side.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (t.isSubmitted()) {
-                        onSelect.accept(t);
-                    } else {
+                    if (e.getSource() == check) {
+                        actions.toggle(t);
+                    } else if (e.getSource() == side && !t.isSubmitted()) {
                         actions.memo(t);
+                    } else {
+                        onSelect.accept(t);
                     }
                 }
-            });
-            check.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    actions.toggle(t);
-                }
-            });
+            };
+            addMouseListener(click);
+            name.addMouseListener(click);
+            side.addMouseListener(click);
+            check.addMouseListener(click);
         }
 
         @Override
@@ -188,16 +180,14 @@ public class TaskListPanel extends UiKit.Card {
         protected void paintComponent(Graphics g0) {
             Graphics2D g = UiKit.aa(g0.create());
             int y = (getHeight() - 20) / 2;
+            g.setColor(on ? UiKit.GREEN : Color.WHITE);
+            g.fillOval(1, y, 20, 20);
             if (on) {
-                g.setColor(UiKit.GREEN);
-                g.fillOval(1, y, 20, 20);
                 g.setColor(Color.WHITE);
                 g.setStroke(new BasicStroke(2.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 g.drawLine(6, y + 10, 9, y + 14);
                 g.drawLine(9, y + 14, 15, y + 6);
             } else {
-                g.setColor(Color.WHITE);
-                g.fillOval(1, y, 20, 20);
                 g.setColor(UiKit.MUTED);
                 g.setStroke(new BasicStroke(2f));
                 g.drawOval(2, y + 1, 18, 18);

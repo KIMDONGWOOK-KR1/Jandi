@@ -22,6 +22,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -92,16 +93,14 @@ public class MainFrame extends JFrame {
         UiKit.RoundButton tabRanch = new UiKit.RoundButton("목장", true);
         UiKit.RoundButton tabGrass = new UiKit.RoundButton("양털", false);
         UiKit.RoundButton repo = new UiKit.RoundButton("git 저장소", false);
-        tabRanch.addActionListener(e -> {
-            cards.show(center, "ranch");
-            tabRanch.setPrimary(true);
-            tabGrass.setPrimary(false);
-        });
-        tabGrass.addActionListener(e -> {
-            cards.show(center, "grass");
-            tabRanch.setPrimary(false);
-            tabGrass.setPrimary(true);
-        });
+        ActionListener tab = e -> { // 두 탭 버튼이 같은 리스너를 쓰고, 눌린 버튼(이벤트 소스)으로 구분한다.
+            boolean grass = e.getSource() == tabGrass;
+            cards.show(center, grass ? "grass" : "ranch");
+            tabRanch.setPrimary(!grass);
+            tabGrass.setPrimary(grass);
+        };
+        tabRanch.addActionListener(tab);
+        tabGrass.addActionListener(tab);
         repo.addActionListener(e -> {
             new RepoDialog(this, ranch).setVisible(true);
             refresh();

@@ -82,8 +82,8 @@ public final class UiKit {
      * @param size  크기
      * @return 글꼴
      */
-    public static Font font(int style, float size) {
-        return new Font(family, style, Math.round(size));
+    public static Font font(int style, int size) {
+        return new Font(family, style, size);
     }
 
     /**
