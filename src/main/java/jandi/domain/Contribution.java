@@ -33,7 +33,8 @@ public class Contribution {
         commits++;
         added += c.added();
         deleted += c.deleted();
-        daily.merge(c.time().toLocalDate(), 1, Integer::sum);
+        LocalDate day = c.time().toLocalDate();
+        daily.put(day, daily.getOrDefault(day, 0) + 1);
     }
 
     /** @return 팀원 번호 */

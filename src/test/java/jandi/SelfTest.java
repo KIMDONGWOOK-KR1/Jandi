@@ -63,7 +63,7 @@ public final class SelfTest {
     }
 
     private static Commit commit(String author, int daysAgo, int added, int deleted) {
-        return new Commit("h", author, author + "@x", LocalDateTime.now().minusDays(daysAgo), "msg", added, deleted);
+        return new Commit(author, author + "@x", LocalDateTime.now().minusDays(daysAgo), added, deleted);
     }
 
     public static void main(String[] args) throws Exception {
@@ -130,12 +130,12 @@ public final class SelfTest {
         });
 
         test("git: log 출력을 커밋으로 읽는다", () -> {
-            String out = "\u001eabc\u001f이도훈\u001fa@b.c\u001f2026-11-01T10:00:00+09:00\u001f첫 커밋\n"
+            String out = "\u001e이도훈\u001fa@b.c\u001f2026-11-01T10:00:00+09:00\n"
                     + "3\t1\tsrc/A.java\n-\t-\timg.png\n\n"
-                    + "\u001edef\u001f김영광\u001fk@b.c\u001f2026-11-02T11:00:00+09:00\u001f둘째\n10\t0\tB.java\n";
+                    + "\u001e김영광\u001fk@b.c\u001f2026-11-02T11:00:00+09:00\n10\t0\tB.java\n";
             List<Commit> cs = GitService.parse(out);
             check(cs.size() == 2, "2건");
-            check(cs.get(0).added() == 3 && cs.get(0).deleted() == 1 && cs.get(0).subject().equals("첫 커밋"), "첫 건");
+            check(cs.get(0).added() == 3 && cs.get(0).deleted() == 1 && cs.get(0).authorEmail().equals("a@b.c"), "첫 건");
             check(cs.get(1).authorName().equals("김영광") && cs.get(1).lines() == 10, "둘째 건");
         });
 

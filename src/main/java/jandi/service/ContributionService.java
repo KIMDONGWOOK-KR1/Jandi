@@ -30,7 +30,9 @@ public final class ContributionService {
      */
     public static Map<String, Contribution> compute(List<Member> members, List<Commit> commits) {
         Map<String, Contribution> map = new LinkedHashMap<>();
-        members.forEach(m -> map.put(m.getId(), new Contribution(m.getId())));
+        for (Member m : members) {
+            map.put(m.getId(), new Contribution(m.getId()));
+        }
         for (Commit c : commits) {
             for (Member m : members) {
                 if (m.wrote(c)) {
@@ -39,8 +41,12 @@ public final class ContributionService {
                 }
             }
         }
-        int totalCommits = map.values().stream().mapToInt(Contribution::getCommits).sum();
-        int totalLines = map.values().stream().mapToInt(Contribution::getLines).sum();
+        int totalCommits = 0;
+        int totalLines = 0;
+        for (Contribution c : map.values()) {
+            totalCommits += c.getCommits();
+            totalLines += c.getLines();
+        }
         for (Contribution c : map.values()) {
             if (totalCommits == 0) {
                 c.setPercent(0);

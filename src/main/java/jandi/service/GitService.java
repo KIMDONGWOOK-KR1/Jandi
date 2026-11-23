@@ -68,6 +68,7 @@ public class GitService {
     /**
      * @param dir 폴더
      * @return git 저장소(작업 폴더)이면 true
+     * @throws JandiException git을 실행할 수 없을 때(설치되지 않음 등)
      */
     public boolean isRepo(Path dir) {
         if (dir == null || !Files.isDirectory(dir)) {
@@ -78,18 +79,18 @@ public class GitService {
     }
 
     /**
-     * 저장소의 모든 브랜치에서 병합 커밋을 뺀 커밋을 읽는다.
+     * 저장소의 내 브랜치와 원격 브랜치에서 병합 커밋을 뺀 커밋을 읽는다.
      *
      * @param repo git 저장소 폴더
      * @return 커밋 목록(최신순). 커밋이 없는 저장소면 빈 목록
-     * @throws JandiException 폴더가 git 저장소가 아닐 때
+     * @throws JandiException 폴더가 git 저장소가 아니거나 git을 실행할 수 없을 때
      */
     public List<Commit> readLog(Path repo) {
         if (!isRepo(repo)) {
             throw new JandiException("git 저장소가 아닙니다: " + repo);
         }
-        Result r = exec(repo, null, "-c", "core.quotepath=false", "log", "--all", "--no-merges", "--numstat",
-                "--pretty=format:%x1e%H%x1f%an%x1f%ae%x1f%aI%x1f%s");
+        Result r = exec(repo, null, "log", "--branches", "--remotes", "--no-merges", "--numstat",
+                "--pretty=format:%x1e%an%x1f%ae%x1f%aI");
         return r.exit() == 0 ? parse(r.out()) : List.of();
     }
 
@@ -106,8 +107,8 @@ public class GitService {
                 continue;
             }
             String[] lines = chunk.split("\n");
-            String[] h = lines[0].split(US, -1);
-            if (h.length < 5) {
+            String[] h = lines[0].split(US);
+            if (h.length < 3) {
                 continue;
             }
             int added = 0;
@@ -119,9 +120,9 @@ public class GitService {
                     deleted += num(n[1]);
                 }
             }
-            list.add(new Commit(h[0], h[1], h[2],
-                    OffsetDateTime.parse(h[3]).atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(),
-                    h[4].trim(), added, deleted));
+            list.add(new Commit(h[0], h[1],
+                    OffsetDateTime.parse(h[2].trim()).atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(),
+                    added, deleted));
         }
         return list;
     }
@@ -140,7 +141,9 @@ public class GitService {
      */
     public static List<String> authors(List<Commit> commits) {
         TreeSet<String> set = new TreeSet<>();
-        commits.forEach(c -> set.add(c.authorName()));
+        for (Commit c : commits) {
+            set.add(c.authorName());
+        }
         return new ArrayList<>(set);
     }
 }
