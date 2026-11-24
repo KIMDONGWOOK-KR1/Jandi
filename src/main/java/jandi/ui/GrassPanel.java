@@ -12,6 +12,7 @@ import java.awt.Graphics2D;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -45,6 +46,17 @@ public class GrassPanel extends UiKit.Card {
         return Math.max(1, Math.min(4, (int) Math.ceil(4.0 * count / max)));
     }
 
+    /** 같은 화면의 팀원들은 표시 기간 안에서 가장 많은 하루 커밋 수를 색 기준으로 공유한다. */
+    static int visibleMax(Collection<Contribution> team, LocalDate start, LocalDate today) {
+        int max = 0;
+        for (Contribution member : team) {
+            for (LocalDate day = start; !day.isAfter(today); day = day.plusDays(1)) {
+                max = Math.max(max, member.getDaily().getOrDefault(day, 0));
+            }
+        }
+        return max;
+    }
+
     @Override
     protected void paintComponent(Graphics g0) {
         super.paintComponent(g0);
@@ -60,18 +72,14 @@ public class GrassPanel extends UiKit.Card {
         g.drawString(UiKit.fit(fm, ranch.gitMessage(), w - 48), 24, 60);
 
         List<Member> ms = ranch.members();
-        int max = 1;
-        for (Contribution c : ranch.contributions().values()) {
-            for (int v : c.getDaily().values()) {
-                max = Math.max(max, v);
-            }
-        }
+        boolean hasTeamCommits = ranch.contributions().values().stream().anyMatch(c -> c.getCommits() > 0);
         int left = 190;
         int top = 84;
         int rowH = Math.max(60, (h - top - 44) / Math.max(1, ms.size()));
         int cell = Math.max(5, Math.min(18, Math.min((w - left - 30) / WEEKS, (rowH - 16) / 7)));
         LocalDate today = LocalDate.now();
         LocalDate start = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).minusWeeks(WEEKS - 1L);
+        int max = visibleMax(ranch.contributions().values(), start, today);
         for (int i = 0; i < ms.size(); i++) {
             Member m = ms.get(i);
             Contribution c = ranch.contributionOf(m.getId());
@@ -80,8 +88,9 @@ public class GrassPanel extends UiKit.Card {
             Sprites.farmer(g, 46, y + 52, 46, base, Sprites.IDLE, false);
             g.setFont(UiKit.font(Font.BOLD, 14));
             g.setColor(UiKit.INK);
-            g.drawString(m.getName() + " · " + (ranch.isGitReady() ? Math.round(c.getPercent()) + "%" : "–"), 78, y + 22);
-            g.setFont(UiKit.font(Font.PLAIN, 11));
+            String pct = UiKit.contributionText(hasTeamCommits, c.getPercent());
+            g.drawString(m.getName() + " · " + pct, 78, y + 22);
+            g.setFont(UiKit.font(Font.PLAIN, 13));
             g.setColor(UiKit.MUTED);
             g.drawString("커밋 " + c.getCommits() + "개", 78, y + 39);
             g.drawString("+" + c.getAdded() + " / -" + c.getDeleted() + " 줄", 78, y + 54);
@@ -98,7 +107,7 @@ public class GrassPanel extends UiKit.Card {
             }
         }
         // 범례
-        g.setFont(UiKit.font(Font.PLAIN, 11));
+        g.setFont(UiKit.font(Font.PLAIN, 13));
         g.setColor(UiKit.MUTED);
         int ly = h - 34;
         g.drawString("최근 " + WEEKS + "주 · 적음", left, ly + 10);

@@ -9,9 +9,11 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -77,16 +79,16 @@ public class TaskListPanel extends UiKit.Card {
         this.me = me;
         this.actions = actions;
         this.onSelect = onSelect;
-        setLayout(new BorderLayout(0, 10));
-        // 머리줄: 제목(왼쪽) + 추가 버튼(오른쪽)
-        JLabel title = UiKit.label("내 할 일", Font.BOLD, 18, UiKit.INK);
+        setLayout(new BorderLayout(0, 6));
+        setBorder(BorderFactory.createEmptyBorder(12, 16, 18, 16));
+        getAccessibleContext().setAccessibleName("내 할 일");
         UiKit.RoundButton add = new UiKit.RoundButton("+", true);
-        add.setFont(UiKit.font(Font.BOLD, 18));
+        add.setFont(UiKit.font(Font.PLAIN, 23));
         add.setToolTipText("할 일 추가");
-        add.setPreferredSize(new Dimension(40, 36));
+        add.getAccessibleContext().setAccessibleName("할 일 추가");
+        add.setPreferredSize(new Dimension(40, 35));
         add.addActionListener(e -> actions.add()); // 눌렸다는 것만 알린다. 입력 창은 메인 창이 띄운다.
         JPanel head = UiKit.clear(new BorderLayout());
-        head.add(title, BorderLayout.WEST);
         head.add(add, BorderLayout.EAST);
         add(head, BorderLayout.NORTH);
         // 목록: BoxLayout(Y_AXIS)으로 줄을 세로로 쌓는다.
@@ -117,7 +119,7 @@ public class TaskListPanel extends UiKit.Card {
         list.removeAll();
         for (Task t : ranch.tasks().tasksOf(me.getId())) {
             list.add(new Row(t));
-            list.add(Box.createVerticalStrut(8));
+            list.add(Box.createVerticalStrut(6));
         }
         if (list.getComponentCount() == 0) { // 할 일이 하나도 없으면 안내 문구를 보인다.
             JLabel empty = new JLabel("<html>아직 할 일이 없습니다.<br>+ 를 눌러 추가해 보세요.</html>");
@@ -134,19 +136,40 @@ public class TaskListPanel extends UiKit.Card {
      */
     private final class Row extends JPanel {
         private final boolean selected;
+        private boolean hovered;
 
         Row(Task t) {
-            super(new BorderLayout(8, 0));
+            super(new BorderLayout(14, 0));
             selected = t.getId().equals(selectedId);
             setOpaque(false);
-            setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+            setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 9));
             setMaximumSize(new Dimension(Integer.MAX_VALUE, 44)); // BoxLayout 안에서 높이는 44로 묶고 너비는 끝까지 늘린다.
             setPreferredSize(new Dimension(100, 44));
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             Check check = new Check(t);
-            JLabel name = UiKit.label(t.getTitle(), Font.BOLD, 14, UiKit.INK);
-            JLabel side = UiKit.label(t.isSubmitted() ? "제출됨" : "메모", Font.PLAIN, 11,
-                    t.isSubmitted() ? UiKit.MUTED : UiKit.BROWN);
+            JLabel name = UiKit.label(t.getTitle(), Font.PLAIN, 24, UiKit.BROWN);
+            name.setToolTipText(t.getTitle());
+            JComponent side;
+            if (t.isSubmitted()) {
+                side = UiKit.label("제출됨", Font.PLAIN, 12, UiKit.MUTED);
+            } else {
+                JButton memo = new JButton("메모") {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        if (hovered || selected || isFocusOwner()) {
+                            super.paintComponent(g);
+                        }
+                    }
+                };
+                memo.setFont(UiKit.font(Font.PLAIN, 12));
+                memo.setForeground(UiKit.BROWN);
+                memo.setContentAreaFilled(false);
+                memo.setBorder(BorderFactory.createEmptyBorder(2, 3, 2, 3));
+                memo.setToolTipText("메모 수정");
+                memo.getAccessibleContext().setAccessibleName(t.getTitle() + " 메모 수정");
+                memo.addActionListener(e -> actions.memo(t));
+                side = memo;
+            }
             add(check, BorderLayout.WEST);
             add(name, BorderLayout.CENTER);
             add(side, BorderLayout.EAST);
@@ -155,11 +178,21 @@ public class TaskListPanel extends UiKit.Card {
                 public void mouseClicked(MouseEvent e) {
                     if (e.getSource() == check) {
                         actions.toggle(t); // 체크 동그라미 → 완료 켜기/끄기
-                    } else if (e.getSource() == side && !t.isSubmitted()) {
-                        actions.memo(t); // "메모" 글자 → 메모 고치기 (제출한 뒤에는 고치지 않는다)
-                    } else {
+                    } else if (!(e.getSource() instanceof JButton)) {
                         onSelect.accept(t); // 그 밖의 곳 → 이 할 일을 고른다
                     }
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    hovered = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    hovered = contains(SwingUtilities.convertPoint(e.getComponent(), e.getPoint(), Row.this));
+                    repaint();
                 }
             };
             // 줄과 그 안의 컴포넌트가 리스너 하나를 함께 쓴다.
@@ -174,7 +207,7 @@ public class TaskListPanel extends UiKit.Card {
         protected void paintComponent(Graphics g0) {
             Graphics2D g = UiKit.aa(g0.create());
             g.setColor(UiKit.SOFT);
-            g.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+            g.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
             if (selected) {
                 g.setColor(UiKit.BROWN);
                 g.setStroke(new BasicStroke(2f));
