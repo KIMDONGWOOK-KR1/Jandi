@@ -81,7 +81,7 @@ public class GrassPanel extends UiKit.Card {
             Sprites.farmer(g, 46, y + 52, 46, base, Sprites.IDLE, false);
             g.setFont(UiKit.font(Font.BOLD, 14));
             g.setColor(UiKit.INK);
-            String pct = hasTeamCommits ? Math.round(c.getPercent()) + "%" : "–";
+            String pct = UiKit.contributionText(hasTeamCommits, c.getPercent());
             g.drawString(m.getName() + " · " + pct, 78, y + 22);
             g.setFont(UiKit.font(Font.PLAIN, 11));
             g.setColor(UiKit.MUTED);

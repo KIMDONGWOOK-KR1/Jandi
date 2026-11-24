@@ -14,6 +14,7 @@ import jandi.store.DataStore;
 import jandi.store.SampleData;
 import jandi.ui.GrassPanel;
 import jandi.ui.RanchPanel;
+import jandi.ui.VisualizationTest;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -164,6 +165,8 @@ public final class SelfTest {
             check(RanchPanel.penScale(0, 40) == 0.42, "최소 크기");
             check(GrassPanel.level(0, 5) == 0 && GrassPanel.level(1, 5) == 1 && GrassPanel.level(5, 5) == 4, "단계");
         });
+
+        test("기여도 표시: 집계 전, 0%, 1% 미만을 구분한다", VisualizationTest::percentages);
 
         test("git: 저장소가 아닌 폴더는 연결을 거절한다", () -> {
             Ranch r = new Ranch(DataStore.open(tmp.resolve("e")));

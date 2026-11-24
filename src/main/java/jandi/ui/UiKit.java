@@ -256,6 +256,17 @@ public final class UiKit {
         return found;
     }
 
+    /** 팀 전체의 집계 여부와 개인의 기여율을 화면에 표시한다. */
+    static String contributionText(boolean hasTeamCommits, double percent) {
+        if (!hasTeamCommits) {
+            return "–";
+        }
+        if (percent > 0 && percent < 1) {
+            return "<1%";
+        }
+        return Math.round(percent) + "%";
+    }
+
     /**
      * 크림색 바탕에 갈색 테두리와 그림자가 있는 둥근 카드 패널.
      */

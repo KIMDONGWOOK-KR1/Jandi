@@ -70,7 +70,7 @@ public class TeamStrip extends UiKit.Card {
             int nx = x + 18 + g.getFontMetrics().stringWidth(m.getName()) + 8;
             g.setFont(UiKit.font(Font.PLAIN, 11));
             g.setColor(UiKit.MUTED);
-            String pct = hasTeamCommits ? Math.round(ranch.contributionOf(m.getId()).getPercent()) + "%" : "–";
+            String pct = UiKit.contributionText(hasTeamCommits, ranch.contributionOf(m.getId()).getPercent());
             g.drawString("제출 " + sub + "/" + tasks.size() + " · 기여도 " + pct, nx, 33);
             Color base = new Color(m.getColor());
             Sprites.farmer(g, x + 40, 118, 62, base, Sprites.IDLE, false);

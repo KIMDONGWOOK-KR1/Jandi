@@ -243,7 +243,7 @@ public class RanchPanel extends JPanel {
         Color own = new Color(m.getColor());
         paintFence(g, x, y, w, h, mine ? own : null);
         String label = m.getName() + (mine ? " (나)" : "") + " · "
-                + (git ? Math.round(c.getPercent()) + "%" : "–");
+                + UiKit.contributionText(git, c.getPercent());
         g.setFont(UiKit.font(Font.BOLD, 13));
         FontMetrics fm = g.getFontMetrics();
         int tw = fm.stringWidth(label) + 16;
