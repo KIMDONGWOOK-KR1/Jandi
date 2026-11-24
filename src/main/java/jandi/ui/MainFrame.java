@@ -6,11 +6,14 @@ import jandi.service.JandiException;
 import jandi.service.Ranch;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
@@ -19,9 +22,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -45,8 +48,8 @@ public class MainFrame extends JFrame {
     private final TeamStrip strip;
     private final TaskListPanel taskList;
     private final DetailPanel detail;
-    /** 프로필 카드의 "양 N마리 · 기여도 N%" 한 줄. refresh()에서 고친다. */
-    private final JLabel profileSub = UiKit.label("", Font.PLAIN, 11, UiKit.MUTED);
+    private final JLabel sheepBadge = new UiKit.StatBadge("제출해서 울타리 안에 있는 양");
+    private final JLabel contributionBadge = new UiKit.StatBadge("Git 기여도");
     /** 지금 고른 할 일 번호(없으면 null). 모든 패널이 이 값 하나를 기준으로 선택 표시를 한다. */
     private String selectedId;
 
@@ -92,7 +95,7 @@ public class MainFrame extends JFrame {
         }, this::select);
 
         // 왼쪽: 내 정보 + 내 할 일
-        JPanel left = UiKit.clear(new BorderLayout(0, 12));
+        JPanel left = UiKit.clear(new BorderLayout(0, 14));
         left.setPreferredSize(new Dimension(290, 100)); // WEST 영역은 너비(290)만 쓰이고, 높이는 창에 맞춰 늘어난다.
         left.add(profileCard(onLogout), BorderLayout.NORTH);
         left.add(taskList, BorderLayout.CENTER);
@@ -158,10 +161,11 @@ public class MainFrame extends JFrame {
         refresh(); // 처음 한 번 그린다.
     }
 
-    /** 왼쪽 위 프로필 카드: 색 동그라미(이름 첫 글자) + 이름 + 양·기여도 한 줄 + 로그아웃 버튼. */
+    /** 팀원 색과 이름, 양 수와 기여도 배지, 로그아웃 버튼을 담은 프로필 카드. */
     private UiKit.Card profileCard(Runnable onLogout) {
         UiKit.Card card = new UiKit.Card();
-        card.setLayout(new BorderLayout(10, 0));
+        card.setLayout(new BorderLayout(7, 0));
+        card.setBorder(BorderFactory.createEmptyBorder(10, 16, 12, 14));
         Color mine = new Color(me.getColor());
         // 동그라미는 클래스를 따로 만들지 않고, JPanel의 paintComponent를 익명 클래스로 오버라이드해 직접 그린다.
         JPanel avatar = new JPanel() {
@@ -170,28 +174,35 @@ public class MainFrame extends JFrame {
                 Graphics2D g = UiKit.aa(g0.create()); // 복사본에 그려서 원래 Graphics의 설정을 바꾸지 않는다.
                 g.setColor(mine);
                 g.fillOval(1, (getHeight() - 42) / 2, 42, 42); // 팀원 색 동그라미(지름 42)
-                g.setColor(Color.WHITE);
-                g.setFont(UiKit.font(Font.BOLD, 18));
-                FontMetrics fm = g.getFontMetrics();
-                String s = me.getName().substring(0, 1); // 이름 첫 글자
-                // 글자 너비의 절반만큼 왼쪽에서 시작해, 글자가 동그라미 가운데(x = 22)에 오게 한다.
-                g.drawString(s, 22 - fm.stringWidth(s) / 2, getHeight() / 2 + fm.getAscent() / 2 - 2);
                 g.dispose();
             }
         };
         avatar.setOpaque(false);
-        avatar.setPreferredSize(new Dimension(46, 46));
-        JLabel name = UiKit.label(me.getName(), Font.BOLD, 17, UiKit.INK);
-        JPanel text = UiKit.clear(new BorderLayout());
+        avatar.setPreferredSize(new Dimension(44, 44));
+        JLabel name = UiKit.label(me.getName(), Font.PLAIN, 27, UiKit.BROWN);
+        name.setToolTipText(me.getName());
+        Dimension nameSize = name.getPreferredSize();
+        nameSize.height -= name.getFontMetrics(name.getFont()).getLeading();
+        name.setPreferredSize(nameSize);
+        name.setVerticalAlignment(SwingConstants.TOP);
+        JPanel badges = UiKit.clear(null);
+        badges.setLayout(new BoxLayout(badges, BoxLayout.X_AXIS));
+        sheepBadge.setMinimumSize(new Dimension(0, sheepBadge.getPreferredSize().height));
+        badges.add(sheepBadge);
+        badges.add(Box.createHorizontalStrut(4));
+        badges.add(contributionBadge);
+        badges.add(Box.createHorizontalGlue());
+        JPanel text = UiKit.clear(new BorderLayout(0, 1));
         text.add(name, BorderLayout.CENTER);
-        text.add(profileSub, BorderLayout.SOUTH);
+        text.add(badges, BorderLayout.SOUTH);
         UiKit.RoundButton logout = new UiKit.RoundButton("로그아웃", false);
-        logout.setFont(UiKit.font(Font.BOLD, 11));
+        logout.setFont(UiKit.font(Font.PLAIN, 16));
+        logout.setBorder(BorderFactory.createEmptyBorder(5, 10, 8, 10));
         logout.addActionListener(e -> {
             dispose();      // 이 창을 닫고
             onLogout.run(); // App이 넘겨준 동작(로그인 창 다시 띄우기)을 실행한다.
         });
-        JPanel east = UiKit.clear(new FlowLayout(FlowLayout.RIGHT, 0, 4));
+        JPanel east = UiKit.clear(new GridBagLayout());
         east.add(logout);
         card.add(avatar, BorderLayout.WEST);
         card.add(text, BorderLayout.CENTER);
@@ -211,10 +222,14 @@ public class MainFrame extends JFrame {
         if (sel == null) {
             selectedId = null;
         }
-        // 프로필 한 줄: 내 양(제출한 할 일) 수와 기여도. git을 읽지 못한 상태면 기여도 대신 "–"를 보인다.
+        // 프로필 배지는 목장·양털 탭과 같은 집계 상태를 표시한다.
         long sheep = ranch.tasks().tasksOf(me.getId()).stream().filter(Task::isSubmitted).count();
-        String pct = ranch.isGitReady() ? Math.round(ranch.contributionOf(me.getId()).getPercent()) + "%" : "–";
-        profileSub.setText("양 " + sheep + "마리 · 기여도 " + pct);
+        boolean hasTeamCommits = ranch.contributions().values().stream().anyMatch(c -> c.getCommits() > 0);
+        String pct = UiKit.contributionText(hasTeamCommits, ranch.contributionOf(me.getId()).getPercent());
+        sheepBadge.setText("양 " + sheep + "마리 사육 중");
+        sheepBadge.setToolTipText("제출한 양 " + sheep + "마리");
+        contributionBadge.setText(pct);
+        contributionBadge.getAccessibleContext().setAccessibleName("기여도 " + pct);
         // 고른 할 일을 각 패널에 알린다. 패널은 선택을 기억하고 스스로 다시 그린다.
         taskList.setSelected(selectedId);
         ranchPanel.setSelected(selectedId);
