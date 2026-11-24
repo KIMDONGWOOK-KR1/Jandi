@@ -14,6 +14,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -141,7 +142,14 @@ public class RanchPanel extends JPanel {
         this.ranch = ranch;
         this.me = me;
         setOpaque(false);
+        setToolTipText("");
         UiKit.listenTaskClicks(this, hits, onSelect);
+    }
+
+    @Override
+    public String getToolTipText(MouseEvent event) {
+        Task task = UiKit.taskAt(hits, event);
+        return task == null ? null : task.getTitle();
     }
 
     /** @param taskId 고른 할 일 번호(없으면 null) */
@@ -253,7 +261,7 @@ public class RanchPanel extends JPanel {
         g.drawString(label, x + 18, y - 13 + 17);
     }
 
-    /** 울타리 안 양의 크기. 양이 늘어도 바뀌지 않는다. */
+    /** 공간이 넉넉할 때 울타리 안 양의 크기. */
     static final int SHEEP_SIZE = 44;
 
     private static final Color WOOD =new Color(0xD29A5E);
@@ -341,28 +349,41 @@ public class RanchPanel extends JPanel {
             return;
         }
         Color wool = UiKit.mix(new Color(m.getColor()), Color.WHITE, 0.62);
-        // 양 크기는 마릿수와 상관없이 같다. 자리가 모자라면 크기를 줄이지 않고 간격만 좁힌다.
-        int size = SHEEP_SIZE;
+        // 위쪽 이름표와 아래쪽 울타리를 뺀 공간을 양마다 한 칸씩 나눈다.
+        int innerW = w - 12;
+        int innerH = h - 16;
+        if (innerW <= 0 || innerH <= 0) {
+            return;
+        }
         int cols = 1;
         double best = -1;
         for (int k = 1; k <= in.size(); k++) {
             int r = (in.size() + k - 1) / k;
-            double fit = Math.min(Math.min(1, (w - 20) / (k * 74.0)), Math.min(1, (h - 22) / (r * 66.0)));
+            double fit = Math.min(Math.min(1, innerW / (k * 80.0)), Math.min(1, innerH / (r * 90.0)));
             if (fit >= best) { // 같은 조건이면 한 줄에 더 많이 세운다.
                 best = fit;
                 cols = k;
             }
         }
         int rowsN = (in.size() + cols - 1) / cols;
-        int stepY = Math.min(72, Math.max(14, (h - 22) / rowsN));
-        int stepX = Math.min(88, Math.max(20, (w - 20) / cols));
-        int top = y + 18 + Math.max(0, (h - 22 - rowsN * stepY) / 2);
+        int stepY = Math.min(96, innerH / rowsN);
+        int stepX = Math.min(88, innerW / cols);
+        int top = y + 11 + (innerH - rowsN * stepY) / 2;
+        // 작은 칸은 양을 우선 표시한다. 제목은 마우스를 올리거나 클릭해서 볼 수 있다.
+        boolean showLabel = stepX >= 40 && stepY >= 54;
+        int labelH = showLabel ? g.getFontMetrics(UiKit.font(Font.PLAIN, 11)).getHeight() + 4 : 0;
+        int halfRoom = Math.max(0, (Math.min(stepX, stepY - labelH) - 1) / 2);
+        int size = Math.max(1, Math.min(SHEEP_SIZE, halfRoom * 4 / 3));
+        int radius = sheepRadius(size);
+        int roamX = Math.max(0, Math.min(SHEEP_ROAM_X, (stepX - 1) / 2 - Math.max(radius, showLabel ? 20 : 0)));
+        int roamY = Math.max(0, Math.min(SHEEP_ROAM_Y, (stepY - labelH - 1) / 2 - radius));
+        int labelW = showLabel ? stepX - 2 * roamX : 0;
         for (int k = 0; k < in.size(); k++) {
             int r = k / cols;
             int inRow = r == rowsN - 1 ? in.size() - r * cols : cols;
             int cx = x + w / 2 - (inRow - 1) * stepX / 2 + (k % cols) * stepX;
-            int cy = top + r * stepY + size / 2;
-            sheepWithLabel(g, in.get(k), cx, cy, size, wool, false, stepX - 4);
+            int cy = top + r * stepY + (stepY - labelH) / 2;
+            sheepWithLabel(g, in.get(k), cx, cy, size, wool, false, labelW, roamX, roamY);
         }
     }
 
@@ -373,12 +394,13 @@ public class RanchPanel extends JPanel {
         int stepX = Math.min(84, (cw - 30) / out.size());
         int start = cellX + cw / 2 - (out.size() - 1) * stepX / 2;
         for (int k = 0; k < out.size(); k++) {
-            sheepWithLabel(g, out.get(k), start + k * stepX, cy, 38, new Color(0xFFFDF6), true, stepX - 4);
+            sheepWithLabel(g, out.get(k), start + k * stepX, cy, 38, new Color(0xFFFDF6), true,
+                    Math.max(40, stepX - 4), SHEEP_ROAM_X, SHEEP_ROAM_Y);
         }
     }
 
     private void sheepWithLabel(Graphics2D g, Task t, int x0, int y0, int size, Color wool, boolean faded,
-                                int labelW) {
+                                int labelW, int roamX, int roamY) {
         // 양마다 박자가 다르다. 한 박자(28초쯤) 안에서 걷기 → 쉬기 → 풀 뜯기 → 쉬기를 되풀이한다.
         int seed = t.getId().hashCode() * 37;
         int time = tick + Math.floorMod(seed, CYCLE);
@@ -387,8 +409,8 @@ public class RanchPanel extends JPanel {
         int[] from = spot(seed, cycle);
         int[] to = spot(seed, cycle + 1);
         double k = Math.min(1.0, u / (double) WALK_TICKS);
-        int cx = x0 + (int) Math.round(from[0] + (to[0] - from[0]) * k);
-        int cy = y0 + (int) Math.round(from[1] + (to[1] - from[1]) * k);
+        int cx = x0 + (int) Math.round((from[0] + (to[0] - from[0]) * k) * roamX / SHEEP_ROAM_X);
+        int cy = y0 + (int) Math.round((from[1] + (to[1] - from[1]) * k) * roamY / SHEEP_ROAM_Y);
         boolean selected = t.getId().equals(selectedId);
         int frame = Sprites.IDLE + ((tick / 4 + Math.floorMod(seed, 40)) % 40 == 0 ? 2 : 0);
         if (selected) {
@@ -398,25 +420,39 @@ public class RanchPanel extends JPanel {
         } else if (u > 220 && u < 330) {
             frame = Sprites.WORK + (tick / 8) % Sprites.COLS;
         }
+        int radius = sheepRadius(size);
+        Rectangle hit = new Rectangle(cx - radius, cy - radius, radius * 2 + 1, radius * 2 + 1);
         if (selected) {
             g.setColor(new Color(255, 255, 255, 170));
-            g.fillOval(cx - size / 2 - 9, cy - size / 2 - 7, size + 18, size + 18);
+            g.fillOval(hit.x, hit.y, radius * 2, radius * 2);
             g.setColor(UiKit.BROWN);
             g.setStroke(new BasicStroke(2f));
-            g.drawOval(cx - size / 2 - 9, cy - size / 2 - 7, size + 18, size + 18);
+            g.drawOval(hit.x, hit.y, radius * 2, radius * 2);
         }
         Sprites.sheep(g, cx, cy, size, wool, faded, frame, to[0] < from[0]);
-        g.setFont(UiKit.font(Font.PLAIN, 11));
-        UiKit.pill(g, t.getTitle(), cx, cy + size / 2 + 3, Math.max(40, labelW), UiKit.INK);
-        hits.put(new Rectangle(cx - size / 2 - 4, cy - size / 2 - 4, size + 8, size + 26), t);
+        if (labelW > 0) {
+            g.setFont(UiKit.font(Font.PLAIN, 11));
+            int labelY = cy + (faded ? size / 2 + 3 : radius + 1);
+            Rectangle label = UiKit.paintPill(g, t.getTitle(), cx, labelY, labelW, UiKit.INK);
+            hit.add(label);
+        }
+        hits.put(hit, t);
     }
 
+    // 모든 동작 프레임과 선택 테두리가 들어가는 반경.
+    private static int sheepRadius(int size) {
+        return (3 * size + 3) / 4;
+    }
+
+    private static final int SHEEP_ROAM_X = 12;
+    private static final int SHEEP_ROAM_Y = 4;
     private static final int CYCLE = 400;
     private static final int WALK_TICKS = 70;
 
     /** 양이 한 박자마다 옮겨 가는 자리(원래 자리에서 벗어난 거리). 같은 양, 같은 박자면 늘 같은 값이다. */
     private static int[] spot(int seed, int cycle) {
         Random r = new Random(seed * 31L + cycle);
-        return new int[]{r.nextInt(25) - 12, r.nextInt(9) - 4};
+        return new int[]{r.nextInt(2 * SHEEP_ROAM_X + 1) - SHEEP_ROAM_X,
+                r.nextInt(2 * SHEEP_ROAM_Y + 1) - SHEEP_ROAM_Y};
     }
 }

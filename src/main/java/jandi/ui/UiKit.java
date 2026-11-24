@@ -154,6 +154,11 @@ public final class UiKit {
      * @param fg   글자색
      */
     public static void pill(Graphics2D g, String text, int cx, int y, int maxW, Color fg) {
+        paintPill(g, text, cx, y, maxW, fg);
+    }
+
+    /** 그린 이름표의 영역을 돌려줘서 클릭 위치에도 같은 치수를 쓴다. */
+    static Rectangle paintPill(Graphics2D g, String text, int cx, int y, int maxW, Color fg) {
         FontMetrics fm = g.getFontMetrics();
         String t = fit(fm, text, maxW - 10);
         int w = fm.stringWidth(t) + 10;
@@ -162,6 +167,7 @@ public final class UiKit {
         g.fillRoundRect(cx - w / 2, y, w, h, 8, 8);
         g.setColor(fg);
         g.drawString(t, cx - w / 2 + 5, y + fm.getAscent() + 1);
+        return new Rectangle(cx - w / 2, y, w, h);
     }
 
     /** 바탕을 칠하지 않는(투명한) 패널을 만든다. */
@@ -246,7 +252,7 @@ public final class UiKit {
     }
 
     /** 마우스 위치의 할 일. 겹치면 나중에 그린(위에 있는) 양이 이긴다. */
-    private static Task taskAt(Map<Rectangle, Task> hits, MouseEvent e) {
+    static Task taskAt(Map<Rectangle, Task> hits, MouseEvent e) {
         Task found = null;
         for (Map.Entry<Rectangle, Task> h : hits.entrySet()) {
             if (h.getKey().contains(e.getPoint())) {

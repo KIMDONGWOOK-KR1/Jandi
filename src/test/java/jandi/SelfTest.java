@@ -166,6 +166,7 @@ public final class SelfTest {
             check(GrassPanel.level(0, 5) == 0 && GrassPanel.level(1, 5) == 1 && GrassPanel.level(5, 5) == 4, "단계");
         });
 
+        test("목장: 작은 울타리 안에서 제출한 양을 구분하고 선택한다", VisualizationTest::submittedSheep);
         test("양털: 표시 기간 안의 팀 전체 기록으로 색을 정한다", VisualizationTest::grassWindow);
         test("기여도 표시: 집계 전, 0%, 1% 미만을 구분한다", VisualizationTest::percentages);
 
