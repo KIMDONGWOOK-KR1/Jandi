@@ -90,7 +90,7 @@ public class GrassPanel extends UiKit.Card {
             g.setColor(UiKit.INK);
             String pct = UiKit.contributionText(hasTeamCommits, c.getPercent());
             g.drawString(m.getName() + " · " + pct, 78, y + 22);
-            g.setFont(UiKit.font(Font.PLAIN, 11));
+            g.setFont(UiKit.font(Font.PLAIN, 13));
             g.setColor(UiKit.MUTED);
             g.drawString("커밋 " + c.getCommits() + "개", 78, y + 39);
             g.drawString("+" + c.getAdded() + " / -" + c.getDeleted() + " 줄", 78, y + 54);
@@ -107,7 +107,7 @@ public class GrassPanel extends UiKit.Card {
             }
         }
         // 범례
-        g.setFont(UiKit.font(Font.PLAIN, 11));
+        g.setFont(UiKit.font(Font.PLAIN, 13));
         g.setColor(UiKit.MUTED);
         int ly = h - 34;
         g.drawString("최근 " + WEEKS + "주 · 적음", left, ly + 10);

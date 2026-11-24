@@ -7,11 +7,14 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.text.StyleContext;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -21,6 +24,8 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -43,19 +48,19 @@ public final class UiKit {
     /** 박스 안쪽 색. */
     public static final Color PEN = new Color(0xD0EAB6);
     /** 카드 바탕색. */
-    public static final Color CREAM = new Color(0xFFF8E8);
+    public static final Color CREAM = new Color(0xFEF8E8);
     /** 카드 안의 옅은 칸 색. */
-    public static final Color SOFT = new Color(0xF0E6D2);
+    public static final Color SOFT = new Color(0xEEE5CF);
     /** 테두리·단추 갈색. */
-    public static final Color BROWN = new Color(0x8A5A2B);
+    public static final Color BROWN = new Color(0x8E5A24);
     /** 글자색. */
-    public static final Color INK = new Color(0x3E2A17);
+    public static final Color INK = new Color(0x684321);
     /** 흐린 글자색. */
-    public static final Color MUTED = new Color(0x8C7A66);
+    public static final Color MUTED = new Color(0x766550);
     /** 완료 표시 초록. */
-    public static final Color GREEN = new Color(0x3FA34D);
+    public static final Color GREEN = new Color(0x23994B);
 
-    /** 화면 전체가 쓰는 글꼴 이름. install()이 이 컴퓨터에 설치된 한글 글꼴로 바꾼다. */
+    /** 앱에 포함된 뚝딱감자체를 우선 쓰고, 읽지 못하면 설치된 한글 글꼴을 쓴다. */
     private static String family = Font.SANS_SERIF;
 
     /** 객체를 만들 일이 없는 클래스라서 생성자를 막아 둔다. */
@@ -64,22 +69,35 @@ public final class UiKit {
 
     /** 글꼴을 고르고 기본 대화상자 글꼴을 맞춘다. 창을 만들기 전에 한 번 부른다. */
     public static void install() {
-        // 후보(macOS, Windows, Linux의 한글 글꼴) 가운데 설치된 첫 번째 것을 쓴다. 하나도 없으면 기본 SANS_SERIF로 둔다.
-        List<String> have = Arrays.asList(
-                GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames());
-        for (String f : new String[]{"Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", "NanumGothic",
-                "Noto Sans CJK KR"}) {
-            if (have.contains(f)) {
-                family = f;
-                break;
-            }
-        }
+        family = loadFamily();
         // JOptionPane 같은 표준 컴포넌트도 같은 글꼴을 쓰도록 Swing의 기본값(UIManager)을 바꾼다.
         Font base = font(Font.PLAIN, 13);
         for (String key : new String[]{"Label.font", "Button.font", "TextField.font", "TextArea.font",
-                "ComboBox.font", "OptionPane.messageFont", "OptionPane.buttonFont", "ToolTip.font"}) {
+                "ComboBox.font", "List.font", "TitledBorder.font", "OptionPane.messageFont",
+                "OptionPane.buttonFont", "ToolTip.font"}) {
             UIManager.put(key, base);
         }
+    }
+
+    private static String loadFamily() {
+        GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        try (InputStream in = UiKit.class.getResourceAsStream("/jandi/tuktakpotato.ttf")) {
+            if (in != null) {
+                Font bundled = Font.createFont(Font.TRUETYPE_FONT, in);
+                env.registerFont(bundled);
+                return bundled.getFamily();
+            }
+        } catch (IOException | FontFormatException ex) {
+            System.err.println("뚝딱감자체를 읽을 수 없어 시스템 글꼴을 사용합니다: " + ex.getMessage());
+        }
+        List<String> have = Arrays.asList(env.getAvailableFontFamilyNames());
+        for (String f : new String[]{"Tuktakpotato", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕",
+                "NanumGothic", "Noto Sans CJK KR"}) {
+            if (have.contains(f)) {
+                return f;
+            }
+        }
+        return Font.SANS_SERIF;
     }
 
     /**
@@ -90,7 +108,8 @@ public final class UiKit {
      * @return 글꼴
      */
     public static Font font(int style, int size) {
-        return new Font(family, style, size);
+        // Swing의 합성 글꼴은 원본 글꼴에 없는 기호(–, · 등)도 대체 글꼴로 그린다.
+        return StyleContext.getDefaultStyleContext().getFont(family, style, size);
     }
 
     /**
@@ -183,6 +202,28 @@ public final class UiKit {
         l.setFont(font(style, size));
         l.setForeground(fg);
         return l;
+    }
+
+    /** 프로필 숫자에 쓰는 갈색 배지. 패딩까지 포함해 내용에 맞는 크기를 갖는다. */
+    static final class StatBadge extends JLabel {
+        StatBadge(String meaning) {
+            super("", SwingConstants.CENTER);
+            setFont(font(Font.PLAIN, 13));
+            setForeground(Color.WHITE);
+            setBorder(BorderFactory.createEmptyBorder(1, 4, 3, 4));
+            setToolTipText(meaning);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g0) {
+            Graphics2D g = aa(g0.create());
+            g.setColor(mix(BROWN, Color.BLACK, 0.3));
+            g.fillRoundRect(0, 2, getWidth(), getHeight() - 2, 15, 15);
+            g.setColor(BROWN);
+            g.fillRoundRect(0, 0, getWidth(), getHeight() - 2, 15, 15);
+            g.dispose();
+            super.paintComponent(g0);
+        }
     }
 
     /** 잔디 바탕과 풀·꽃 무늬를 그리는 배경 패널. 메인 창과 로그인 창의 바탕으로 쓴다. */
@@ -319,7 +360,8 @@ public final class UiKit {
             setBorderPainted(false);
             setFocusPainted(false);
             setOpaque(false);
-            setFont(font(Font.BOLD, 13));
+            setFont(font(Font.PLAIN, 16));
+            setRolloverEnabled(true);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             setBorder(BorderFactory.createEmptyBorder(8, 14, 11, 14));
         }
@@ -342,10 +384,17 @@ public final class UiKit {
             int h = getHeight();
             boolean down = getModel().isPressed() && getModel().isArmed(); // 버튼 위에서 마우스를 누르고 있는 동안
             Color bg = isEnabled() ? fill : mix(fill, CREAM, 0.55); // 쓸 수 없으면 카드 바탕색 쪽으로 흐리게
+            if (isEnabled() && getModel().isRollover() && !down) {
+                bg = mix(bg, CREAM, 0.12);
+            }
             g.setColor(mix(bg, Color.BLACK, 0.28)); // 그림자: 버튼 색을 어둡게 한 색
             g.fillRoundRect(0, 3, w, h - 3, 14, 14);
             g.setColor(bg);
             g.fillRoundRect(0, down ? 2 : 0, w, h - 3, 14, 14); // 버튼 면. 누르면 2픽셀 아래에 그린다.
+            if (isFocusOwner()) {
+                g.setColor(mix(text, bg, 0.35));
+                g.drawRoundRect(3, down ? 4 : 2, w - 7, h - 9, 10, 10);
+            }
             g.setFont(getFont());
             FontMetrics fm = g.getFontMetrics();
             g.setColor(isEnabled() ? text : mix(text, bg, 0.5));

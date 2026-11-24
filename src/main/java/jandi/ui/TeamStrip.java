@@ -68,7 +68,7 @@ public class TeamStrip extends UiKit.Card {
             g.setColor(UiKit.INK);
             g.drawString(m.getName(), x + 18, 34);
             int nx = x + 18 + g.getFontMetrics().stringWidth(m.getName()) + 8;
-            g.setFont(UiKit.font(Font.PLAIN, 11));
+            g.setFont(UiKit.font(Font.PLAIN, 13));
             g.setColor(UiKit.MUTED);
             String pct = UiKit.contributionText(hasTeamCommits, ranch.contributionOf(m.getId()).getPercent());
             g.drawString("제출 " + sub + "/" + tasks.size() + " · 기여도 " + pct, nx, 33);
@@ -88,7 +88,7 @@ public class TeamStrip extends UiKit.Card {
                 }
                 Sprites.sheep(g, cx, cy, 32, t.isSubmitted() ? wool : new Color(0xFFFDF6), !t.isSubmitted(),
                         Sprites.IDLE, false);
-                g.setFont(UiKit.font(Font.PLAIN, 10));
+                g.setFont(UiKit.font(Font.PLAIN, 12));
                 FontMetrics fm = g.getFontMetrics();
                 String s = UiKit.fit(fm, t.getTitle(), step - 6);
                 g.setColor(t.isSubmitted() ? UiKit.INK : UiKit.MUTED);

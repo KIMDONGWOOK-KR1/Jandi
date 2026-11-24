@@ -69,6 +69,8 @@ src/main/resources/jandi farmer.png, sheep.png (스프라이트 시트: 동작 4
 src/test/java/jandi SelfTest(자체 테스트), ScreenshotTour(화면 캡처)
 ```
 
+화면 글꼴은 귀댕이의 [뚝딱감자체](https://blog.naver.com/guidang2/224435435470)입니다. 실행 JAR에 포함되어 별도로 설치할 필요가 없습니다.
+
 ## 알려진 한계
 
 - 한 컴퓨터에서만 동작합니다. 네트워크와 GitHub 연동은 다음 단계입니다.
