@@ -51,7 +51,7 @@ java -jar build/dist/jandi.jar
 Windows에서는 Git Bash에서 실행합니다. 잔디가 실행 중이면 jar 파일이 잠겨 빌드가 멈추므로, 먼저 끄고 빌드하세요.
 
 1. 컴파일 (`build/classes`)
-2. 자체 테스트 `jandi.SelfTest` 11개 실행 (외부 라이브러리 없음)
+2. 자체 테스트 `jandi.SelfTest` 15개 실행 (외부 라이브러리 없음)
 3. 실행 jar `build/dist/jandi.jar`
 4. API 문서 `build/javadoc/index.html`
 
@@ -65,8 +65,8 @@ src/main/java/jandi
 ├── store/          DataStore(CSV 저장·로그), Csv, SampleData
 └── ui/             MainFrame, LoginDialog, RanchPanel, GrassPanel, TaskListPanel,
                     DetailPanel, TeamStrip, RepoDialog, Sprites, UiKit
-src/main/resources/jandi farmer.png, sheep.png (스프라이트 시트: 동작 4줄 × 4칸)
-src/test/java/jandi SelfTest(자체 테스트), ScreenshotTour(화면 캡처)
+src/main/resources/jandi farmer.png, sheep.png (스프라이트 시트: 동작 4줄 × 4칸), tuktakpotato.ttf (글꼴)
+src/test/java/jandi SelfTest(자체 테스트), ScreenshotTour(화면 캡처), ui/VisualizationTest(화면 계산 테스트)
 ```
 
 화면 글꼴은 귀댕이의 [뚝딱감자체](https://blog.naver.com/guidang2/224435435470)입니다. 실행 JAR에 포함되어 별도로 설치할 필요가 없습니다.
