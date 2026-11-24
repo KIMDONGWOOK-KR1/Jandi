@@ -12,7 +12,7 @@ public class Task {
 
     private final String id;
     private final String ownerId;
-    private String title;
+    private final String title;
     private String memo;
     private TaskStatus status;
     private final LocalDateTime createdAt;
@@ -51,11 +51,6 @@ public class Task {
     /** @return 제목 */
     public String getTitle() {
         return title;
-    }
-
-    /** @param title 제목 */
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     /** @return 메모 */

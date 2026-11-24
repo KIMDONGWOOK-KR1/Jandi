@@ -146,11 +146,6 @@ public class DataStore {
         write("settings.csv", SETTING_HEADER, rows);
     }
 
-    /** @return 데이터 폴더 */
-    public Path dir() {
-        return dir;
-    }
-
     /** @return 팀원 목록(등록 순서) */
     public List<Member> members() {
         return members;
