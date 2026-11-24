@@ -4,6 +4,7 @@ import jandi.domain.Member;
 import jandi.domain.Task;
 import jandi.domain.TaskStatus;
 import jandi.service.GitService;
+import jandi.service.JandiException;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -107,6 +108,8 @@ public final class SampleData {
                 }
             }
             return true;
+        } catch (JandiException e) { // git이 없거나 실행하지 못함
+            return false;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

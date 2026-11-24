@@ -28,7 +28,8 @@ import java.util.Random;
 import java.util.function.Consumer;
 
 /**
- * 화면 공통 도구: 색, 글꼴, 카드 패널, 둥근 버튼.
+ * 화면 공통 도구: 색, 글꼴, 잔디 배경, 카드 패널, 둥근 버튼, 이름표, 직접 그린 양의 클릭 처리.
+ * 여러 화면이 같은 색과 모양을 쓰도록 한곳에 모았다. 모두 static이라 객체를 만들지 않고 쓴다.
  *
  * @author Team 3
  * @version 0.1
@@ -54,13 +55,16 @@ public final class UiKit {
     /** 완료 표시 초록. */
     public static final Color GREEN = new Color(0x3FA34D);
 
+    /** 화면 전체가 쓰는 글꼴 이름. install()이 이 컴퓨터에 설치된 한글 글꼴로 바꾼다. */
     private static String family = Font.SANS_SERIF;
 
+    /** 객체를 만들 일이 없는 클래스라서 생성자를 막아 둔다. */
     private UiKit() {
     }
 
-    /** 글꼴을 고르고 기본 대화상자 글꼴을 맞춘다. */
+    /** 글꼴을 고르고 기본 대화상자 글꼴을 맞춘다. 창을 만들기 전에 한 번 부른다. */
     public static void install() {
+        // 후보(macOS, Windows, Linux의 한글 글꼴) 가운데 설치된 첫 번째 것을 쓴다. 하나도 없으면 기본 SANS_SERIF로 둔다.
         List<String> have = Arrays.asList(
                 GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames());
         for (String f : new String[]{"Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", "NanumGothic",
@@ -70,6 +74,7 @@ public final class UiKit {
                 break;
             }
         }
+        // JOptionPane 같은 표준 컴포넌트도 같은 글꼴을 쓰도록 Swing의 기본값(UIManager)을 바꾼다.
         Font base = font(Font.PLAIN, 13);
         for (String key : new String[]{"Label.font", "Button.font", "TextField.font", "TextArea.font",
                 "ComboBox.font", "OptionPane.messageFont", "OptionPane.buttonFont", "ToolTip.font"}) {
@@ -78,6 +83,8 @@ public final class UiKit {
     }
 
     /**
+     * {@link #install()}에서 고른 글꼴로 원하는 모양과 크기의 글꼴을 만든다.
+     *
      * @param style 글꼴 모양({@link Font#PLAIN}, {@link Font#BOLD})
      * @param size  크기
      * @return 글꼴
@@ -87,6 +94,11 @@ public final class UiKit {
     }
 
     /**
+     * 안티에일리어싱을 켠다. 도형과 글자의 가장자리가 계단처럼 보이지 않고 매끄럽게 그려진다.
+     *
+     * <p>받은 그래픽을 형변환만 해서 그대로 돌려준다. 그래서 보통 {@code aa(g.create())}처럼 복사본을 넘기고
+     * 다 그린 뒤 {@code dispose()}한다. 그러면 그리면서 바꾼 색이나 선 굵기가 원래 그래픽에 남지 않는다.</p>
+     *
      * @param g 그래픽
      * @return 매끄럽게 그리도록 설정한 그래픽
      */
@@ -180,9 +192,9 @@ public final class UiKit {
             int h = getHeight();
             g.setColor(GRASS);
             g.fillRect(0, 0, w, h);
-            Random r = new Random(7);
+            Random r = new Random(7); // 씨앗을 고정해, 창 크기가 같으면 다시 그려도 풀과 꽃이 같은 자리에 나오게 한다.
             g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            for (int i = 0; i < 46; i++) {
+            for (int i = 0; i < 46; i++) { // 풀 46포기: 한 점에서 위로 뻗는 선 세 개
                 int x = r.nextInt(Math.max(1, w));
                 int y = r.nextInt(Math.max(1, h));
                 g.setColor(GRASS_DARK);
@@ -190,7 +202,7 @@ public final class UiKit {
                 g.drawLine(x, y, x, y - 13);
                 g.drawLine(x, y, x + 6, y - 9);
             }
-            for (int i = 0; i < 14; i++) {
+            for (int i = 0; i < 14; i++) { // 꽃 14송이: 흰 꽃잎 네 장과 노란 가운데
                 int x = r.nextInt(Math.max(1, w));
                 int y = r.nextInt(Math.max(1, h));
                 g.setColor(Color.WHITE);
@@ -205,6 +217,9 @@ public final class UiKit {
 
     /**
      * 직접 그린 양을 마우스로 고를 수 있게 한다. 양 위에서는 손 모양 커서를 보이고, 누르면 그 할 일을 넘긴다.
+     *
+     * <p>양은 컴포넌트가 아니라 패널 위에 그린 그림이라, 양마다 리스너를 붙일 수 없다. 그래서 패널이 그릴 때
+     * 양이 차지하는 영역(Rectangle)을 적어 두고, 여기서 마우스 위치가 어느 영역 안인지 찾는다.</p>
      *
      * @param c        양을 그리는 패널
      * @param hits     그릴 때 채워 두는 클릭 영역과 할 일 (그린 순서대로)
@@ -225,6 +240,7 @@ public final class UiKit {
                 c.setCursor(Cursor.getPredefinedCursor(taskAt(hits, e) != null ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
             }
         };
+        // MouseAdapter 하나가 클릭(MouseListener)과 움직임(MouseMotionListener)을 모두 받으므로 두 번 등록한다.
         c.addMouseListener(mouse);
         c.addMouseMotionListener(mouse);
     }
@@ -246,16 +262,17 @@ public final class UiKit {
     public static class Card extends JPanel {
         /** 카드를 만든다. */
         public Card() {
-            setOpaque(false);
-            setBorder(BorderFactory.createEmptyBorder(14, 16, 20, 16));
+            setOpaque(false); // 둥근 모서리 바깥으로 뒤의 바탕이 보이게 한다.
+            setBorder(BorderFactory.createEmptyBorder(14, 16, 20, 16)); // 안쪽 여백. 아래는 그림자 자리만큼 더 준다.
         }
 
+        /** 그림자 → 크림색 바탕 → 갈색 테두리 순서로 그린다. 카드에 넣은 컴포넌트는 그 위에 Swing이 그린다. */
         @Override
         protected void paintComponent(Graphics g0) {
             Graphics2D g = aa(g0.create());
             int w = getWidth();
             int h = getHeight();
-            g.setColor(new Color(94, 59, 26, 70));
+            g.setColor(new Color(94, 59, 26, 70)); // 반투명 갈색 그림자. 바탕보다 조금 아래까지 내려 그린다.
             g.fillRoundRect(2, 6, w - 4, h - 7, 20, 20);
             g.setColor(CREAM);
             g.fillRoundRect(2, 2, w - 4, h - 8, 18, 18);
@@ -267,11 +284,12 @@ public final class UiKit {
     }
 
     /**
-     * 아래쪽에 그림자가 있는 둥근 버튼.
+     * 아래쪽에 그림자가 있는 둥근 버튼. JButton의 기본 모양을 끄고 paintComponent에서 직접 그린다.
+     * 누르면 2픽셀 내려가 눌린 것처럼 보이고, 쓸 수 없을 때는 색이 흐려진다.
      */
     public static class RoundButton extends JButton {
-        private Color fill;
-        private Color text;
+        private Color fill; // 버튼 색
+        private Color text; // 글자색
 
         /**
          * @param label   버튼 글
@@ -289,7 +307,11 @@ public final class UiKit {
             setBorder(BorderFactory.createEmptyBorder(8, 14, 11, 14));
         }
 
-        /** @param primary true면 갈색 강조 버튼으로 바꾼다 */
+        /**
+         * 강조 여부를 바꾼다. 메인 창의 탭 버튼처럼, 지금 고른 쪽을 표시할 때 쓴다.
+         *
+         * @param primary true면 갈색 강조 버튼으로 바꾼다
+         */
         public final void setPrimary(boolean primary) {
             fill = primary ? BROWN : new Color(0xE9DCC3);
             text = primary ? Color.WHITE : BROWN;
@@ -301,16 +323,16 @@ public final class UiKit {
             Graphics2D g = aa(g0.create());
             int w = getWidth();
             int h = getHeight();
-            boolean down = getModel().isPressed() && getModel().isArmed();
-            Color bg = isEnabled() ? fill : mix(fill, CREAM, 0.55);
-            g.setColor(mix(bg, Color.BLACK, 0.28));
+            boolean down = getModel().isPressed() && getModel().isArmed(); // 버튼 위에서 마우스를 누르고 있는 동안
+            Color bg = isEnabled() ? fill : mix(fill, CREAM, 0.55); // 쓸 수 없으면 카드 바탕색 쪽으로 흐리게
+            g.setColor(mix(bg, Color.BLACK, 0.28)); // 그림자: 버튼 색을 어둡게 한 색
             g.fillRoundRect(0, 3, w, h - 3, 14, 14);
             g.setColor(bg);
-            g.fillRoundRect(0, down ? 2 : 0, w, h - 3, 14, 14);
+            g.fillRoundRect(0, down ? 2 : 0, w, h - 3, 14, 14); // 버튼 면. 누르면 2픽셀 아래에 그린다.
             g.setFont(getFont());
             FontMetrics fm = g.getFontMetrics();
             g.setColor(isEnabled() ? text : mix(text, bg, 0.5));
-            String s = fit(fm, getText(), w - 8);
+            String s = fit(fm, getText(), w - 8); // 버튼보다 긴 글은 끝을 …로 줄인다.
             g.drawString(s, (w - fm.stringWidth(s)) / 2, (h - 3 - fm.getHeight()) / 2 + fm.getAscent() + (down ? 2 : 0));
             g.dispose();
         }
